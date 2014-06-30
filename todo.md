@@ -1,6 +1,6 @@
 # TODO
 
-## comleted
+## completed
 
 1. ~~check if image is stable~~
 2. ~~count generations from start to stable~~
