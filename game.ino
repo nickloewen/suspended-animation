@@ -2,8 +2,8 @@
 int cells[8][8];
 // Buffer for state of cells while changing other array
 int cellsBuffer[8][8];
-
-int humourDad = 0;
+// count how many generations have elapsed
+int generations = 1;
 
 void setup() {
   // LED array setup
@@ -36,6 +36,24 @@ void loop() {
   
   generation();
   
+  // check if current generation is different from previous one
+  
+  int allCellsTheSame = 1; // 1 = true, 0 = false  
+  for (int x=0; x<8; x++) {
+    for (int y=0; y<8; y++) {
+      if (cells[x][y] != cellsBuffer[x][y]) {
+        allCellsTheSame = 0;
+        break;
+      }
+    }
+    if (allCellsTheSame == 0) { break; }
+  }
+  
+  if (allCellsTheSame == 1) {
+    Serial.println("all cells the same");
+    exit(0);
+  }
+  
   // make binary row values from cells array
   for (int x=0; x<8; x++) {
     String acc = "";
@@ -44,19 +62,16 @@ void loop() {
     }
     Serial.println(acc);
     writeBuffer[x] = strtol(acc.c_str(), NULL, 2);
-    Serial.println(writeBuffer[x]);
   }
 
   // update LEDs
   for (int r=1; r<9; r++) {
       Write_Max7219(r,writeBuffer[r-1]);
   }
-  Serial.println("Tick \n");
   delay(500);
 }
 
 void generation() {
-  Serial.println("next generation \n");
   // copy cells to buffer
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) {
@@ -64,8 +79,6 @@ void generation() {
     }
   } 
 
-  Serial.println("cells copied \n"); 
-  
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) { 
       int neighbours = 0; // count neighbours
@@ -91,5 +104,7 @@ void generation() {
       } // end of if
     }
   }
-  Serial.println("generation complete \n");
+  generations++;
+  Serial.print("generation: ");
+  Serial.println(generations);
 }
