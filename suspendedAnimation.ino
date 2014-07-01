@@ -1,7 +1,7 @@
 /*Port Definitions*/
 int Max7219_pinCLK = 10;
 int Max7219_pinCS = 9;
-int Max7219_pinDIN = 8;
+int Max7219_pinDIN = 5;
  
 void Write_Max7219_byte(unsigned char DATA) {
   unsigned char i;

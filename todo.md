@@ -10,4 +10,4 @@
 
 ## upcoming
 
-1. optimize for running on batteries
+1. ~~optimize for running on batteries~~ too lazy
