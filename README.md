@@ -7,7 +7,6 @@ The final product is a self-contained unit, which runs without any connection to
 the outside world. It uses an Arduino Pro Mini, the LED matrix, and a battery pack.
 
 ![Photograph of Version 1](images/suspended_animation-v1.jpg)
-![Photograph of Version 1](images/suspended_animation-v1-2.jpg)
 
 ## Resources
 
