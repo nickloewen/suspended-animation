@@ -1,12 +1,14 @@
-// Array of cells
+// Array of cells:
 int cells[8][8];
-// Buffer for state of cells while changing other array
+// Buffer for state of cells while changing other array:
 int cellsBuffer[8][8];
+// Flag detects an update that didn't actually change anything:
+bool repeated;
 
 int generations; // number of generations elapsed since start of game
 int maxGenerations = 100; // maximum number of generations before game is restarted
 
-int serialDebugging = 0; // 0 = off; 1 = on 
+bool serialDebugging = true; // true or false
 
 void setup() {
   // LED array setup
@@ -18,36 +20,35 @@ void setup() {
   
   // LIFE setup  
   startGame();
+  repeated = false;
+  generations = 1;
   
   // serial
   if (serialDebugging) { Serial.begin(9600); }
 }
  
 void loop() {
-  int writeBuffer[8];
-  
+  if ( repeated || (generations > maxGenerations)) {
+    startGame();
+    generations = 1;
+  }
+
   // update game state
   generation();
+
+  // write cell contents to LED matrix
+  showCells();
   
   // check if current generation is different from previous one
-  int repeated = repeatedScreen();
-  
-  if ((repeated == 1) || (generations > maxGenerations)) {
-    delay(100);
-    startGame();
-  }
-  
-  // convert cells array to binary values that LED matrix can read
-  cellsToBinary(writeBuffer);
-
-  // update LEDs
-  for (int r=1; r<9; r++) { Write_Max7219(r, writeBuffer[r-1]); }
+  repeated = repeatedScreen();
   
   // delay between generations
   delay(500);
 }
 
 void generation() {
+  if (serialDebugging) { Serial.println("Generation "+String(generations)+String(":")); }
+
   // copy cells to buffer
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) {
@@ -81,18 +82,14 @@ void generation() {
     }
   }
   generations++;
-  if (serialDebugging) {
-    Serial.print("generation: ");
-    Serial.println(generations);
-  }
 }
 
 void startGame() {
+  if (serialDebugging) { Serial.println("\nNEW GAME"); }
+
   // setup
   generations = 1;
   randomSeed(analogRead(0));
-
-  if (serialDebugging) { Serial.println("NEW GAME"); }
 
   flashScreen();
   
@@ -118,25 +115,36 @@ void flashScreen() {
   delay(50);
 }
 
-int repeatedScreen() {
+bool repeatedScreen() {
   for (int x=0; x<8; x++) {
     for (int y=0; y<8; y++) {
       if (cells[x][y] != cellsBuffer[x][y]) {
-        return 0;
+        return false;
       }
     }
   }
-  return 1;
+  return true;
 }
 
-void cellsToBinary(int writeBuffer[]) {
-  // make binary row values from cells array
+void showCells() {
+  // convert cells array to binary values that LED matrix can read
+  String debugLine = String("");
   for (int x=0; x<8; x++) {
-    String acc = "";
+    // For column with offset x, build and send a 1-byte pattern
+    if (serialDebugging) { debugLine = "x = "+String(x)+": "; }
+
+    byte oneBit  = 1;
+    byte thisRow = 0;
     for (int y=0; y<8; y++) {
-      acc = acc + String(cells[x][y]);
+      if (bool(cells[x][y])) { thisRow = thisRow | oneBit; }
+      if (serialDebugging) { debugLine += bool( thisRow & oneBit ) ? "1 " : "0 "; }
+      oneBit = oneBit << 1;
     }
-    if (serialDebugging) { Serial.println(acc); }
-    writeBuffer[x] = strtol(acc.c_str(), NULL, 2);
+    if (serialDebugging) { Serial.println(debugLine); }
+
+    // Transfer constructed byte for column x to the LED matrix
+    Write_Max7219(x+1, thisRow);
   }
+
 }
+
